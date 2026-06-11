@@ -6,8 +6,15 @@ using System.Data;
 
 namespace Dreamine.Database.MySql;
 
+/// <summary>
+/// Provides a MySQL database provider implementation.
+/// </summary>
 public sealed class MySqlDatabaseProvider : DatabaseProviderBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MySqlDatabaseProvider"/> class.
+    /// </summary>
+    /// <param name="connectionString">The MySQL connection string.</param>
     public MySqlDatabaseProvider(string connectionString)
         : base(connectionString)
     {
