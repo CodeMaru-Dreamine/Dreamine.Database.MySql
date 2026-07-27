@@ -81,6 +81,7 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
             return;
         }
 
+        ValidateDatabaseIdentifier(databaseName);
         builder.Database = string.Empty;
 
         using var connection = new MySqlConnection(builder.ConnectionString);
@@ -125,6 +126,7 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
             return;
         }
 
+        ValidateDatabaseIdentifier(databaseName);
         builder.Database = string.Empty;
 
         await using var connection = new MySqlConnection(builder.ConnectionString);
@@ -320,6 +322,18 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(identifier);
         return "`" + identifier.Replace("`", "``", StringComparison.Ordinal) + "`";
+    }
+
+    private static void ValidateDatabaseIdentifier(string identifier)
+    {
+        if (identifier.Length > 64 ||
+            identifier.Any(character =>
+                !(char.IsLetterOrDigit(character) || character is '_' or '-' or ' ')))
+        {
+            throw new ArgumentException(
+                "MySQL database names may contain only letters, digits, spaces, underscores, and hyphens, up to 64 characters.",
+                nameof(identifier));
+        }
     }
 
     /// <summary>
