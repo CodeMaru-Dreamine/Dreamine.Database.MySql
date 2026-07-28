@@ -48,7 +48,7 @@ public sealed class MySqlDatabaseProviderTests
         var exception = Assert.Throws<TargetInvocationException>(
             () => Invoke<string>("QuoteIdentifier", identifier!));
 
-        Assert.IsAssignableFrom<ArgumentException>(exception.InnerException);
+        Assert.IsType<ArgumentException>(exception.InnerException, exactMatch: false);
     }
 
     [Fact]
