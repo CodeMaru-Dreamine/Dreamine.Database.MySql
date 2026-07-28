@@ -3,6 +3,7 @@ using Dreamine.Database.Core.Mapping;
 using Dreamine.Database.Core.Providers;
 using MySqlConnector;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Dreamine.Database.MySql;
 
@@ -81,14 +82,14 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
             return;
         }
 
-        ValidateDatabaseIdentifier(databaseName);
+        var createDatabaseSql = BuildCreateDatabaseSql(databaseName);
         builder.Database = string.Empty;
 
         using var connection = new MySqlConnection(builder.ConnectionString);
         connection.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE DATABASE IF NOT EXISTS {QuoteIdentifier(databaseName)}";
+        command.CommandText = createDatabaseSql;
         command.ExecuteNonQuery();
     }
 
@@ -126,14 +127,14 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
             return;
         }
 
-        ValidateDatabaseIdentifier(databaseName);
+        var createDatabaseSql = BuildCreateDatabaseSql(databaseName);
         builder.Database = string.Empty;
 
         await using var connection = new MySqlConnection(builder.ConnectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         await using var command = connection.CreateCommand();
-        command.CommandText = $"CREATE DATABASE IF NOT EXISTS {QuoteIdentifier(databaseName)}";
+        command.CommandText = createDatabaseSql;
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -334,6 +335,16 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
                 "MySQL database names may contain only letters, digits, spaces, underscores, and hyphens, up to 64 characters.",
                 nameof(identifier));
         }
+    }
+
+    [SuppressMessage(
+        "Security",
+        "S2077:SQL queries should not be dynamically formatted",
+        Justification = "Database identifiers cannot be SQL parameters. The identifier is constrained to MySQL's 64-character limit and an explicit alphanumeric allowlist before it is quoted.")]
+    private string BuildCreateDatabaseSql(string databaseName)
+    {
+        ValidateDatabaseIdentifier(databaseName);
+        return $"CREATE DATABASE IF NOT EXISTS {QuoteIdentifier(databaseName)}";
     }
 
     /// <summary>
