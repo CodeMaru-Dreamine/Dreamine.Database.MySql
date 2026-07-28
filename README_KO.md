@@ -1,5 +1,11 @@
 # Dreamine.Database.MySql
 
+[![CI](https://github.com/CodeMaru-Dreamine/Dreamine.Database.MySql/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/CodeMaru-Dreamine/Dreamine.Database.MySql/actions/workflows/ci.yml) [![품질 게이트](https://sonarcloud.io/api/project_badges/measure?project=CodeMaru-Dreamine_Dreamine.Database.MySql&metric=alert_status&branch=main)](https://sonarcloud.io/summary/new_code?id=CodeMaru-Dreamine_Dreamine.Database.MySql&branch=main) [![보안](https://sonarcloud.io/api/project_badges/measure?project=CodeMaru-Dreamine_Dreamine.Database.MySql&metric=security_rating&branch=main)](https://sonarcloud.io/summary/new_code?id=CodeMaru-Dreamine_Dreamine.Database.MySql&branch=main) [![커버리지](https://sonarcloud.io/api/project_badges/measure?project=CodeMaru-Dreamine_Dreamine.Database.MySql&metric=coverage&branch=main)](https://sonarcloud.io/summary/new_code?id=CodeMaru-Dreamine_Dreamine.Database.MySql&branch=main)
+
+[![라이선스](https://img.shields.io/github/license/CodeMaru-Dreamine/Dreamine.Database.MySql?label=license)](./LICENSE) [![.NET](https://img.shields.io/badge/.NET-8-512BD4)](https://dotnet.microsoft.com/) [![NuGet](https://img.shields.io/nuget/v/Dreamine.Database.MySql?label=nuget)](https://www.nuget.org/packages/Dreamine.Database.MySql) [![다운로드](https://img.shields.io/nuget/dt/Dreamine.Database.MySql?label=downloads)](https://www.nuget.org/packages/Dreamine.Database.MySql)
+
+[![문서](https://img.shields.io/badge/📘_문서-dreamine.kr-2F80ED)](https://dreamine.kr) [![가이드](https://img.shields.io/badge/📘_가이드-dreamine.kr-3498DB)](https://dreamine.kr) [![플레이그라운드](https://img.shields.io/badge/🎮_플레이그라운드-dreamine.kr-8E44AD)](https://dreamine.kr) [![도서](https://img.shields.io/badge/📖_도서-Practical_MVVM_Architecture-111111)](https://dreamine.kr)
+
 `Dreamine.Database.MySql`은 Dreamine Database 패키지군의 MySQL Provider입니다.
 
 [English documentation](./README.md)
