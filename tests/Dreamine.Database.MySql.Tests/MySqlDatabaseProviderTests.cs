@@ -12,6 +12,8 @@ public sealed class MySqlDatabaseProviderTests
 {
     private const string ConnectionString =
         "Server=localhost;Port=3306;Database=dreamine_tests;User ID=tester;Password=test;";
+    private const string UnavailableServer =
+        "Server=127.0.0.1;Port=1;User ID=tester;Password=test;Connection Timeout=1;";
 
     [Fact]
     public void Constructor_RejectsMissingConnectionStrings()
@@ -118,6 +120,89 @@ public sealed class MySqlDatabaseProviderTests
             () => provider.EnsureDatabaseExistsAsync());
     }
 
+    [Theory]
+    [InlineData("dreamine")]
+    [InlineData("Dreamine 2026")]
+    [InlineData("드리마인_데이터")]
+    [InlineData("dreamine-test")]
+    public void BuildCreateDatabaseSql_AcceptsSupportedNames(string databaseName)
+    {
+        var sql = Invoke<string>("BuildCreateDatabaseSql", databaseName);
+
+        Assert.Equal($"CREATE DATABASE IF NOT EXISTS `{databaseName}`", sql);
+    }
+
+    [Fact]
+    public void BuildCreateDatabaseSql_AcceptsMaximumLengthName()
+    {
+        var databaseName = new string('a', 64);
+
+        var sql = Invoke<string>("BuildCreateDatabaseSql", databaseName);
+
+        Assert.EndsWith($"`{databaseName}`", sql, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EnsureDatabaseExists_WithoutCatalog_UsesBaseConnectionPath()
+    {
+        var provider = new MySqlDatabaseProvider(UnavailableServer);
+
+        Assert.Throws<MySqlException>(provider.EnsureDatabaseExists);
+    }
+
+    [Fact]
+    public void EnsureDatabaseExists_WithValidCatalog_AttemptsServerConnection()
+    {
+        var provider = new MySqlDatabaseProvider(
+            $"{UnavailableServer}Database=Dreamine 2026;");
+
+        Assert.Throws<MySqlException>(provider.EnsureDatabaseExists);
+    }
+
+    [Fact]
+    public async Task EnsureDatabaseExistsAsync_WithoutCatalog_ObservesCancellation()
+    {
+        var provider = new MySqlDatabaseProvider(UnavailableServer);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => provider.EnsureDatabaseExistsAsync(cancellation.Token));
+    }
+
+    [Fact]
+    public async Task EnsureDatabaseExistsAsync_WithValidCatalog_ObservesCancellation()
+    {
+        var provider = new MySqlDatabaseProvider(
+            $"{UnavailableServer}Database=Dreamine 2026;");
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => provider.EnsureDatabaseExistsAsync(cancellation.Token));
+    }
+
+    [Fact]
+    public void IsTableExists_WithValidName_AttemptsQueryConnection()
+    {
+        var provider = new MySqlDatabaseProvider(
+            $"{UnavailableServer}Database=dreamine_tests;");
+
+        Assert.Throws<MySqlException>(() => provider.IsTableExists("orders"));
+    }
+
+    [Fact]
+    public async Task IsTableExistsAsync_WithValidName_ObservesCancellation()
+    {
+        var provider = new MySqlDatabaseProvider(
+            $"{UnavailableServer}Database=dreamine_tests;");
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => provider.IsTableExistsAsync("orders", cancellation.Token));
+    }
+
     [Fact]
     public void BuildCreateTableSql_UsesMySqlTypesAndGeneratedKeySyntax()
     {
@@ -135,6 +220,17 @@ public sealed class MySqlDatabaseProviderTests
         Assert.Contains("`CreatedAt` DATETIME", sql, StringComparison.Ordinal);
         Assert.Contains("`Payload` BLOB", sql, StringComparison.Ordinal);
         Assert.Contains("`Name` TEXT", sql, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildCreateTableSql_UsesPrimaryKeyWithoutAutoIncrementForAssignedKey()
+    {
+        var map = DatabaseEntityMap.Create<AssignedKeyEntity>();
+
+        var sql = Invoke<string>("BuildCreateTableSql", map);
+
+        Assert.Contains("`Id` INT PRIMARY KEY", sql, StringComparison.Ordinal);
+        Assert.DoesNotContain("AUTO_INCREMENT", sql, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -207,5 +303,12 @@ public sealed class MySqlDatabaseProviderTests
         public byte[] Payload { get; set; } = [];
 
         public string Name { get; set; } = "";
+    }
+
+    [DatabaseTable("assigned_keys")]
+    private sealed class AssignedKeyEntity
+    {
+        [DatabaseKey]
+        public int Id { get; set; }
     }
 }
