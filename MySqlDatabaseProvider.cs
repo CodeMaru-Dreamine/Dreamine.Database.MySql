@@ -89,7 +89,7 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
         connection.Open();
 
         using var command = connection.CreateCommand();
-        command.CommandText = createDatabaseSql;
+        ConfigureCreateDatabaseCommand(command, createDatabaseSql);
         command.ExecuteNonQuery();
     }
 
@@ -134,7 +134,7 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 
         await using var command = connection.CreateCommand();
-        command.CommandText = createDatabaseSql;
+        ConfigureCreateDatabaseCommand(command, createDatabaseSql);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
@@ -345,6 +345,15 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
     {
         ValidateDatabaseIdentifier(databaseName);
         return $"CREATE DATABASE IF NOT EXISTS {QuoteIdentifier(databaseName)}";
+    }
+
+    private static void ConfigureCreateDatabaseCommand(
+        MySqlCommand command,
+        string commandText)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+        ArgumentException.ThrowIfNullOrWhiteSpace(commandText);
+        command.CommandText = commandText;
     }
 
     /// <summary>
