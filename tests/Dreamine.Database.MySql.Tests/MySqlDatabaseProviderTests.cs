@@ -143,6 +143,30 @@ public sealed class MySqlDatabaseProviderTests
     }
 
     [Fact]
+    public void ConfigureCreateDatabaseCommand_AssignsValidatedCommandText()
+    {
+        using var command = new MySqlCommand();
+        const string sql = "CREATE DATABASE IF NOT EXISTS `dreamine`";
+
+        InvokeStatic("ConfigureCreateDatabaseCommand", command, sql);
+
+        Assert.Equal(sql, command.CommandText);
+    }
+
+    [Fact]
+    public void ConfigureCreateDatabaseCommand_RejectsInvalidArguments()
+    {
+        var nullCommand = Assert.Throws<TargetInvocationException>(
+            () => InvokeStatic("ConfigureCreateDatabaseCommand", null!, "SELECT 1"));
+        Assert.IsType<ArgumentNullException>(nullCommand.InnerException);
+
+        using var command = new MySqlCommand();
+        var blankText = Assert.Throws<TargetInvocationException>(
+            () => InvokeStatic("ConfigureCreateDatabaseCommand", command, " "));
+        Assert.IsType<ArgumentException>(blankText.InnerException, exactMatch: false);
+    }
+
+    [Fact]
     public void EnsureDatabaseExists_WithoutCatalog_UsesBaseConnectionPath()
     {
         var provider = new MySqlDatabaseProvider(UnavailableServer);
@@ -273,6 +297,15 @@ public sealed class MySqlDatabaseProviderTests
             BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.NotNull(method);
         return (T)method.Invoke(CreateProvider(), arguments)!;
+    }
+
+    private static void InvokeStatic(string methodName, params object?[] arguments)
+    {
+        var method = typeof(MySqlDatabaseProvider).GetMethod(
+            methodName,
+            BindingFlags.Static | BindingFlags.NonPublic);
+        Assert.NotNull(method);
+        method.Invoke(null, arguments);
     }
 
     [DatabaseTable("all_types")]
