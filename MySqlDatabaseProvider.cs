@@ -86,10 +86,10 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
         builder.Database = string.Empty;
 
         using var connection = new MySqlConnection(builder.ConnectionString);
-        connection.Open();
-
         using var command = connection.CreateCommand();
         ConfigureCreateDatabaseCommand(command, createDatabaseSql);
+
+        connection.Open();
         command.ExecuteNonQuery();
     }
 
@@ -131,10 +131,10 @@ public sealed class MySqlDatabaseProvider : DatabaseProviderBase
         builder.Database = string.Empty;
 
         await using var connection = new MySqlConnection(builder.ConnectionString);
-        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
-
         await using var command = connection.CreateCommand();
         ConfigureCreateDatabaseCommand(command, createDatabaseSql);
+
+        await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
